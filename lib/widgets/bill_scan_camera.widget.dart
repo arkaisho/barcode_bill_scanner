@@ -62,18 +62,18 @@ class _BillScanCameraWidgetState extends State<BillScanCameraWidget> {
       ResolutionPreset.high,
       enableAudio: false,
     );
-    _controller?.initialize().then((_) {
+    _controller?.initialize().then((_) async {
       if (!mounted) {
         return;
       }
-      _controller?.getMinZoomLevel().then((value) {
+      await _controller?.getMinZoomLevel().then((value) {
         zoomLevel = value;
         minZoomLevel = value;
       });
-      _controller?.getMaxZoomLevel().then((value) {
+      await _controller?.getMaxZoomLevel().then((value) {
         maxZoomLevel = value;
       });
-      _controller?.lockCaptureOrientation(DeviceOrientation.portraitUp);
+      await _controller?.lockCaptureOrientation(DeviceOrientation.portraitUp);
       _controller?.startImageStream(_processCameraImage);
       setState(() {});
     });
@@ -92,14 +92,17 @@ class _BillScanCameraWidgetState extends State<BillScanCameraWidget> {
     }
     final bytes = allBytes.done().buffer.asUint8List();
 
-    final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
+    final Size imageSize =
+        Size(image.width.toDouble(), image.height.toDouble());
 
     final camera = cameras[_cameraIndex];
-    final imageRotation = InputImageRotationMethods.fromRawValue(camera.sensorOrientation) ??
-        InputImageRotation.Rotation_0deg;
+    final imageRotation =
+        InputImageRotationMethods.fromRawValue(camera.sensorOrientation) ??
+            InputImageRotation.Rotation_0deg;
 
     final inputImageFormat =
-        InputImageFormatMethods.fromRawValue(image.format.raw) ?? InputImageFormat.NV21;
+        InputImageFormatMethods.fromRawValue(image.format.raw) ??
+            InputImageFormat.NV21;
 
     final planeData = image.planes.map(
       (Plane plane) {
@@ -118,7 +121,8 @@ class _BillScanCameraWidgetState extends State<BillScanCameraWidget> {
       planeData: planeData,
     );
 
-    final inputImage = InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
+    final inputImage =
+        InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
 
     widget.onImage(inputImage);
   }

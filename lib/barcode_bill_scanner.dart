@@ -48,7 +48,6 @@ class BarcodeBillScanner extends StatefulWidget {
     this.infoText = "Scan the barcode using your camera.",
     required this.onSuccess,
     this.onAction,
-    required this.onCancel,
     this.onError,
     this.onActionLabel = "Type barcode",
     this.color = Colors.cyan,
@@ -65,9 +64,6 @@ class BarcodeBillScanner extends StatefulWidget {
 
   /// Method called by the action button.
   final Function()? onAction;
-
-  /// Method called by the cancel button.
-  final Function() onCancel;
 
   /// Label for the action button.
   final String onActionLabel;
@@ -101,105 +97,10 @@ class _BarcodeMLKitState extends State<BarcodeBillScanner> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 12.0,
-        backgroundColor: Colors.black,
-        automaticallyImplyLeading: false,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarBrightness: Brightness.dark,
-          systemStatusBarContrastEnforced: true,
-        ),
-        elevation: 0,
-      ),
-      body: Stack(
-        alignment: Alignment.center,
-        children: [
-          BillScanCameraWidget(
-            onImage: (inputImage) {
-              _processImage(inputImage);
-            },
-          ),
-          RotatedBox(
-            quarterTurns: 1,
-            child: Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  color: widget.backdropColor,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: GestureDetector(
-                          onTap: widget.onCancel,
-                          child: const Padding(
-                            padding: EdgeInsets.fromLTRB(24.0, 16.0, 16.0, 16.0),
-                            child: Icon(
-                              Icons.arrow_back_ios,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        child: Text(
-                          widget.infoText,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontFamily: "Montserrat",
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16.0,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    color: widget.backdropColor,
-                  ),
-                ),
-                Expanded(
-                  flex: 4,
-                  child: Container(
-                    color: Colors.transparent,
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    color: widget.backdropColor,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: widget.onAction,
-                  child: Container(
-                    width: double.infinity,
-                    color: Colors.white,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24.0),
-                      child: Text(
-                        widget.onActionLabel,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: "Montserrat",
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16.0,
-                          color: widget.textColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      body: BillScanCameraWidget(
+        onImage: (inputImage) {
+          _processImage(inputImage);
+        },
       ),
     );
   }
@@ -212,7 +113,12 @@ class _BarcodeMLKitState extends State<BarcodeBillScanner> {
 
     if (barcodes.isNotEmpty) {
       try {
-        Barcode validBarcode = barcodes.firstWhere((e) => e.value.displayValue?.length == 44);
+        Barcode? validBarcode = barcodes.firstWhere(
+          (barcode) {
+            return barcode.value.displayValue?.length == 44;
+          },
+        );
+        if (validBarcode == null) return;
         String code = widget.convertToFebraban
             ? BillUtil.getFormattedbarcode(validBarcode.value.displayValue!)
             : validBarcode.value.displayValue!;
